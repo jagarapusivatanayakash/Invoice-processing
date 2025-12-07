@@ -156,26 +156,6 @@ Content-Type: application/json
 GET /api/agent/logs/{thread_id}
 ```
 
-## 🔄 Workflow Overview
-
-```mermaid
-graph TD
-    A[📤 Upload Invoice] --> B[🔍 OCR Extraction]
-    B --> C[📋 Parse & Validate]
-    C --> D[🔗 PO Matching]
-    D --> E{📊 Match Score?}
-    E -->|High| F[✅ Auto-approve]
-    E -->|Low| G[⏸ Human Review]
-    G --> H{👤 Decision}
-    H -->|Accept| I[💼 Reconcile]
-    H -->|Reject| J[📞 Manual Handoff]
-    F --> I
-    I --> K[📋 Generate Entries]
-    K --> L[💾 Post to ERP]
-    L --> M[📧 Send Notifications]
-    M --> N[🎯 Complete]
-```
-
 ## ✅ Processing Checklist
 
 ```
@@ -368,4 +348,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - **LangGraph**: For the powerful workflow engine
 - **FastAPI**: For the excellent API framework
 - **Tesseract**: For OCR capabilities
+
 - **SQLite**: For reliable data persistence
