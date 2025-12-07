@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Processing Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-tab:hover {
+            background: #764ba2;
+            color: white;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f9f9ff;
+        }
+
+        .upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .upload-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            background: #764ba2;
+        }
+
+        .submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* Line Items Styles */
+        .line-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .line-item input {
+            margin-bottom: 0;
+        }
+
+        .add-line-btn {
+            background: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .add-line-btn:hover {
+            background: #218838;
+        }
+
+        .remove-line-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .remove-line-btn:hover {
+            background: #c82333;
+        }
+
+        .status-box {
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .status-box.processing {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+        }
+
+        .status-box.paused {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+        }
+
+        .status-box.completed {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+
+        .status-box h3 {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+        .pending-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .pending-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            transition: all 0.3s;
+        }
+
+        .pending-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .pending-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .pending-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .pending-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pending-detail {
+            font-size: 14px;
+        }
+
+        .pending-detail strong {
+            color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-accept {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-accept:hover {
+            background: #218838;
+        }
+
+        .btn-reject {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-reject:hover {
+            background: #c82333;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .file-preview {
+            margin-top: 10px;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border: 1px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .info-box strong {
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🤖 Invoice Processing Agent</h1>
+            <p style="color: #666; margin-top: 5px;">AI-powered invoice processing with human-in-the-loop review</p>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchPage('process')">📤 Process Invoice</button>
+                <button class="nav-tab" onclick="switchPage('pending')">⏳ Pending Reviews</button>
+            </div>
+        </div>
+
+        <!-- Page 1: Process Invoice -->
+        <div id="process-page" class="page active">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">Upload Invoice</h2>
+                
+                <div class="info-box" style="background: #e7f3ff; border: 1px solid #667eea; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+                    <p style="margin: 0; color: #333;">
+                        <strong>💡 Flexible Input:</strong> You can provide either an invoice image, or enter the details manually, or both. 
+                        If you provide an image, OCR will extract the data. If you provide details, they'll be used directly.
+                    </p>
+                </div>
+                
+                <div class="upload-section" id="upload-section">
+                    <input type="file" id="invoice-file" accept="image/*,.pdf" onchange="handleFileSelect(event)">
+                    <div>
+                        <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#667eea" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p style="margin: 10px 0; color: #666;">Click to upload invoice image</p>
+                        <label for="invoice-file">
+                            <button type="button" class="upload-btn" onclick="document.getElementById('invoice-file').click()">
+                                Choose File
+                            </button>
+                        </label>
+                        <p id="file-preview" class="file-preview"></p>
+                    </div>
+                </div>
+
+                <form id="invoice-form" onsubmit="submitInvoice(event)">
+                    <div class="form-group">
+                        <label>Invoice ID (optional - auto-generated if not provided)</label>
+                        <input type="text" id="invoice-id" placeholder="INV-2024-12-001">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vendor Name (optional)</label>
+                        <input type="text" id="vendor-name" placeholder="TechCorp Solutions Ltd">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Amount (optional)</label>
+                        <input type="number" id="amount" step="0.01" placeholder="46500.00">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Currency</label>
+                        <select id="currency">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                        </select>
+                    </div>
+
+                    <!-- Line Items Section -->
+                    <div class="form-group">
+                        <label>Line Items (optional)</label>
+                        <!-- Header Row -->
+                        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px; font-weight: bold; font-size: 14px; color: #666;">
+                            <div>Description</div>
+                            <div>Quantity</div>
+                            <div>Unit Price</div>
+                            <div>Total</div>
+                            <div>PO Reference</div>
+                            <div></div>
+                        </div>
+                        <div id="line-items-container">
+                            <div class="line-item" data-index="0">
+                                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                                    <input type="text" placeholder="Description" class="line-desc">
+                                    <input type="number" placeholder="Qty" class="line-qty" step="1">
+                                    <input type="number" placeholder="Unit Price" class="line-price" step="0.01">
+                                    <input type="number" placeholder="Total" class="line-total" step="0.01" readonly>
+                                    <input type="text" placeholder="PO Reference" class="line-po-ref">
+                                    <button type="button" onclick="removeLineItem(0)" class="remove-line-btn">❌</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="addLineItem()" class="add-line-btn">➕ Add Line Item</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Vendor Tax ID (optional)</label>
+                        <input type="text" id="vendor-tax-id" placeholder="TAX123456789">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Invoice Date (optional)</label>
+                        <input type="date" id="invoice-date">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Due Date (optional)</label>
+                        <input type="date" id="due-date">
+                    </div>
+
+                    <button type="submit" class="submit-btn" id="submit-btn">
+                        🚀 Process Invoice
+                    </button>
+                </form>
+
+                <!-- Status Box -->
+                <div id="status-container"></div>
+            </div>
+        </div>
+
+        <!-- Page 2: Pending Reviews -->
+        <div id="pending-page" class="page">
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>⏳ Pending Reviews</h2>
+                    <button class="upload-btn" onclick="loadPendingReviews()">🔄 Refresh</button>
+                </div>
+                
+                <div id="pending-list" class="pending-list">
+                    <!-- Pending items will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        let currentThreadId = null;
+        let statusPollInterval = null;
+
+        // Page switching
+        function switchPage(pageName) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(pageName + '-page').classList.add('active');
+            event.target.classList.add('active');
+
+            if (pageName === 'pending') {
+                loadPendingReviews();
+            }
+        }
+
+        // Line Items Management
+        let lineItemIndex = 1;
+
+        function addLineItem() {
+            const container = document.getElementById('line-items-container');
+            const newItem = document.createElement('div');
+            newItem.className = 'line-item';
+            newItem.setAttribute('data-index', lineItemIndex);
+            
+            newItem.innerHTML = `
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <input type="text" placeholder="Description" class="line-desc">
+                    <input type="number" placeholder="Qty" class="line-qty" step="1" onchange="calculateLineTotal(${lineItemIndex})">
+                    <input type="number" placeholder="Unit Price" class="line-price" step="0.01" onchange="calculateLineTotal(${lineItemIndex})">
+                    <input type="number" placeholder="Total" class="line-total" step="0.01" readonly>
+                    <input type="text" placeholder="PO Reference" class="line-po-ref">
+                    <button type="button" onclick="removeLineItem(${lineItemIndex})" class="remove-line-btn">❌</button>
+                </div>
+            `;
+            
+            container.appendChild(newItem);
+            lineItemIndex++;
+        }
+
+        function removeLineItem(index) {
+            const item = document.querySelector(`[data-index="${index}"]`);
+            if (item) {
+                item.remove();
+            }
+        }
+
+        function calculateLineTotal(index) {
+            const item = document.querySelector(`[data-index="${index}"]`);
+            if (item) {
+                const qty = parseFloat(item.querySelector('.line-qty').value) || 0;
+                const price = parseFloat(item.querySelector('.line-price').value) || 0;
+                const total = qty * price;
+                item.querySelector('.line-total').value = total.toFixed(2);
+            }
+        }
+
+        // Add event listeners to the first line item for auto-calculation
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstItem = document.querySelector('[data-index="0"]');
+            if (firstItem) {
+                firstItem.querySelector('.line-qty').addEventListener('change', () => calculateLineTotal(0));
+                firstItem.querySelector('.line-price').addEventListener('change', () => calculateLineTotal(0));
+            }
+        });
+
+        // File selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-preview').textContent = `📎 ${file.name}`;
+            }
+        }
+
+        // Submit invoice
+        async function submitInvoice(event) {
+            event.preventDefault();
+
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing...';
+
+            const formData = new FormData();
+            
+            const fileInput = document.getElementById('invoice-file');
+            const hasFile = fileInput.files[0];
+            
+            // Build invoice data object (only include filled fields)
+            const invoiceData = {};
+            
+            const invoiceId = document.getElementById('invoice-id').value.trim();
+            const vendorName = document.getElementById('vendor-name').value.trim();
+            const amount = document.getElementById('amount').value.trim();
+            const vendorTaxId = document.getElementById('vendor-tax-id').value.trim();
+            const invoiceDate = document.getElementById('invoice-date').value;
+            const dueDate = document.getElementById('due-date').value;
+            
+            if (invoiceId) invoiceData.invoice_id = invoiceId;
+            if (vendorName) invoiceData.vendor_name = vendorName;
+            if (amount) invoiceData.amount = parseFloat(amount);
+            if (vendorTaxId) invoiceData.vendor_tax_id = vendorTaxId;
+            
+            invoiceData.currency = document.getElementById('currency').value;
+            
+            // Use provided dates or defaults
+            if (invoiceDate) {
+                invoiceData.invoice_date = invoiceDate;
+            } else {
+                invoiceData.invoice_date = new Date().toISOString().split('T')[0];
+            }
+            
+            if (dueDate) {
+                invoiceData.due_date = dueDate;
+            } else {
+                invoiceData.due_date = new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+            }
+            
+            // Collect line items
+            const lineItems = [];
+            const lineItemElements = document.querySelectorAll('.line-item');
+            lineItemElements.forEach(item => {
+                const desc = item.querySelector('.line-desc').value.trim();
+                const qty = item.querySelector('.line-qty').value.trim();
+                const price = item.querySelector('.line-price').value.trim();
+                const total = item.querySelector('.line-total').value.trim();
+                const poRef = item.querySelector('.line-po-ref').value.trim();
+                
+                if (desc || qty || price || poRef) {
+                    lineItems.push({
+                        desc: desc,
+                        qty: qty ? parseFloat(qty) : 0,
+                        unit_price: price ? parseFloat(price) : 0,
+                        total: total ? parseFloat(total) : (parseFloat(qty) || 0) * (parseFloat(price) || 0),
+                        po_ref: poRef
+                    });
+                }
+            });
+            
+            if (lineItems.length > 0) {
+                invoiceData.line_items = lineItems;
+            }
+            
+            // Check if we have meaningful data beyond just currency and auto-generated dates
+            const meaningfulFields = ['invoice_id', 'vendor_name', 'amount', 'vendor_tax_id', 'line_items'];
+            const hasData = meaningfulFields.some(field => invoiceData[field] && 
+                (Array.isArray(invoiceData[field]) ? invoiceData[field].length > 0 : true)) || 
+                invoiceDate || dueDate;
+            
+            // Validate at least one input
+            if (!hasFile && !hasData) {
+                alert('Please provide either an invoice image or invoice details (or both)');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Process Invoice';
+                return;
+            }
+            
+            // Add file if provided
+            if (hasFile) {
+                formData.append('image', fileInput.files[0]);
+            }
+            
+            // Add data if provided
+            if (hasData) {
+                formData.append('invoice_data', JSON.stringify(invoiceData));
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/agent/invoke`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.status === 400) {
+                    alert('Error: ' + result.detail);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '🚀 Process Invoice';
+                    return;
+                }
+                
+                currentThreadId = result.thread_id;
+
+                showStatus('processing', 'Processing invoice...', result);
+
+                // Start polling status
+                startStatusPolling(currentThreadId);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Process Invoice';
+            }
+        }
+
+        // Start polling status
+        function startStatusPolling(threadId) {
+            if (statusPollInterval) {
+                clearInterval(statusPollInterval);
+            }
+
+            statusPollInterval = setInterval(() => checkStatus(threadId), 2000);
+        }
+
+        // Check status
+        async function checkStatus(threadId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/agent/status/${threadId}`);
+                const status = await response.json();
+
+                if (status.is_paused) {
+                    clearInterval(statusPollInterval);
+                    showStatus('paused', 'Pending Human Review', status);
+                } else if (status.status === 'COMPLETED') {
+                    clearInterval(statusPollInterval);
+                    showStatus('completed', 'Invoice Processed Successfully!', status);
+                    
+                    // Re-enable submit button
+                    const submitBtn = document.getElementById('submit-btn');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = '🚀 Process Invoice';
+                } else {
+                    showStatus('processing', 'Processing invoice...', status);
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+            }
+        }
+
+        // Show status
+        function showStatus(type, message, data) {
+            const container = document.getElementById('status-container');
+            
+            let content = `
+                <div class="status-box ${type}">
+                    <h3>
+                        ${type === 'processing' ? '<span class="spinner"></span>' : ''}
+                        ${type === 'paused' ? '⚠️' : ''}
+                        ${type === 'completed' ? '✅' : ''}
+                        ${message}
+                    </h3>
+            `;
+
+            if (data) {
+                content += `
+                    <div class="info-box">
+                        <p><strong>Thread ID:</strong> ${data.thread_id || currentThreadId}</p>
+                        <p><strong>Invoice ID:</strong> ${data.invoice_id || 'Processing...'}</p>
+                        <p><strong>Current Stage:</strong> ${data.current_stage || 'Starting...'}</p>
+                        ${data.match_score ? `<p><strong>Match Score:</strong> ${(data.match_score * 100).toFixed(1)}%</p>` : ''}
+                    </div>
+                `;
+
+                if (type === 'paused') {
+                    content += `
+                        <p style="margin-top: 15px; color: #721c24;">
+                            ⚠️ This invoice requires human review. Please check the <strong>Pending Reviews</strong> tab.
+                        </p>
+                    `;
+                }
+            }
+
+            content += '</div>';
+            container.innerHTML = content;
+        }
+
+        // Load pending reviews
+        async function loadPendingReviews() {
+            const listContainer = document.getElementById('pending-list');
+            listContainer.innerHTML = '<div class="empty-state"><div class="spinner"></div><p>Loading...</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/human-review/pending`);
+                const data = await response.json();
+
+                if (data.items.length === 0) {
+                    listContainer.innerHTML = `
+                        <div class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h3>No Pending Reviews</h3>
+                            <p>All invoices have been processed</p>
+                        </div>
+                    `;
+                } else {
+                    listContainer.innerHTML = data.items.map(item => `
+                        <div class="pending-item">
+                            <div class="pending-header">
+                                <h3>${item.invoice_id}</h3>
+                                <span class="pending-badge">PENDING REVIEW</span>
+                            </div>
+                            <div class="pending-details">
+                                <div class="pending-detail">
+                                    <strong>Vendor:</strong> ${item.vendor_name || 'N/A'}
+                                </div>
+                                <div class="pending-detail">
+                                    <strong>Amount:</strong> $${item.amount ? item.amount.toLocaleString() : 'N/A'}
+                                </div>
+                                <div class="pending-detail">
+                                    <strong>Match Score:</strong> ${item.match_score ? (item.match_score * 100).toFixed(1) + '%' : 'N/A'}
+                                </div>
+                                <div class="pending-detail">
+                                    <strong>Reason:</strong> ${item.reason || 'Review required'}
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="btn btn-accept" onclick="submitDecision('${item.thread_id}', 'ACCEPT')">
+                                    ✅ Accept
+                                </button>
+                                <button class="btn btn-reject" onclick="submitDecision('${item.thread_id}', 'REJECT')">
+                                    ❌ Reject
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p style="color: #dc3545;">Error loading reviews: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Submit decision
+        async function submitDecision(threadId, decision) {
+            if (!confirm(`Are you sure you want to ${decision} this invoice?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/human-review/decision`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        thread_id: threadId,
+                        decision: decision,
+                        reviewer_id: 'user@company.com',
+                        notes: `${decision} via web UI`
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`✅ Invoice ${decision}ED successfully! Agent has resumed processing.`);
+                    loadPendingReviews();
+                } else {
+                    alert('❌ Error processing decision');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        // Auto-refresh pending reviews every 10 seconds when on that page
+        setInterval(() => {
+            if (document.getElementById('pending-page').classList.contains('active')) {
+                loadPendingReviews();
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
